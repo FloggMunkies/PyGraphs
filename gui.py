@@ -2,6 +2,8 @@ import pygame, arrow, graphing, math
 import color_constants as cc
 
 # TODO ensure node/edge relationships are stored in a single object instance, Graph
+# Seperating Widget_Manager duties into Graph object to decrease complexity of tracking Node/Edge relationships
+# Test
 
 # Initialization settings
 SCREEN_WIDTH = 1600
