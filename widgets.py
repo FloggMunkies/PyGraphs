@@ -180,6 +180,7 @@ class Edge(Widget):
         print("Deleting ", self, self.id)
         self.handler.remove_widget(self)
 
+
 class Button(Widget):
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
@@ -499,7 +500,15 @@ class WidgetManager(object):
         self.start_pos = []
 
     def test(self):
-        print("----------------------")
-        for i, n in enumerate(self.node_list):
-            for j, e in enumerate(n.edges):
-                print(i, n, j, e)
+        print("TEST DOES NOTHING RN")
+
+    def keydown(self, event):
+        for widget in self.selected_widgets:
+            if type(widget) is not Edge:
+                if event.key == pygame.K_RETURN:
+                    self.selected_widgets = []
+                elif event.key == pygame.K_BACKSPACE:
+                    widget.text_string = widget.text_string[:-1]
+                else:
+                    widget.text_string += event.unicode
+                widget.update_text()
