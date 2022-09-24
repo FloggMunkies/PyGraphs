@@ -1,3 +1,4 @@
+import networkx as nx
 
 class Graph(object):
     def __init__(self):
