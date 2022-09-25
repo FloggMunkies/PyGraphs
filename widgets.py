@@ -104,7 +104,6 @@ class Widget(pygame.sprite.Sprite):
 class Node(Widget):
     def __init__(self, graph=None, **kwargs):
         super().__init__(text="Default", **kwargs)
-
         self.graph = graph
 
         # Get kwargs
@@ -113,7 +112,6 @@ class Node(Widget):
         self.area = kwargs.get("area")
         self.settings_required = kwargs.get("settings_required")
         self.items = kwargs.get("items")
-        self.edges = kwargs.get("edges")
 
         # Assign default values if no kwargs
         if self.id is None:
@@ -126,8 +124,6 @@ class Node(Widget):
             self.settings_required = []
         if self.items is None:
             self.items = 0
-        if self.edges is None:
-            self.edges = []
 
         # update Text
         self.text_string = str(self.id)
@@ -141,44 +137,66 @@ class Node(Widget):
     def delete(self):
         pass
 
+    def add_edge(self, other_node, **kwargs):
+        pass
 
-class Edge(Widget):
-    def __init__(self, graph=None, **kwargs):
-        super().__init__(**kwargs)
 
-        self.graph = graph
+# Depreciated
 
-        self.weight = kwargs.get("weight")
-        self.nodes = kwargs.get("nodes")
+# class Edge(Widget):
+#     def __init__(self, graph=None, **kwargs):
+#         super().__init__(**kwargs)
+#         self.graph = graph
+#
+#         self.weight = kwargs.get("weight")
+#         self.nodes = kwargs.get("nodes")
+#
+#         if self.weight is None:
+#             self.weight = 1
+#
+#         if self.nodes:
+#             self.start_pos = self.nodes[0].rect.center
+#             self.end_pos = self.nodes[1].rect.center
+#
+#             self.rect.centerx = (self.nodes[0].rect.centerx + self.nodes[1].rect.centerx) / 2
+#             self.rect.centery = (self.nodes[0].rect.centery + self.nodes[1].rect.centery) / 2
+#
+#     def draw(self, surface):
+#         super().draw(surface)
+#
+#         if self.nodes:
+#             self.start_pos = self.nodes[0].rect.center
+#             self.end_pos = self.nodes[1].rect.center
+#             self.rect.centerx = (self.nodes[0].rect.centerx + self.nodes[1].rect.centerx) / 2
+#             self.rect.centery = (self.nodes[0].rect.centery + self.nodes[1].rect.centery) / 2
+#             # pygame.draw.line(surface, COLOR_EDGE, self.start_pos, self.end_pos)
+#             a = pygame.Vector2(self.start_pos)
+#             b = pygame.Vector2(self.end_pos)
+#             # print(math.acos(a*b/(a.magnitude() * b.magnitude())))
+#             arrow.draw_arrow(surface, a, b, COLOR_EDGE, 2, 10, 10)
+#             # arrow.draw_arrow(screen, pygame.Vector2(self.start_pos), pygame.Vector2(x, y), COLOR_EDGE, 2, 10, 10)
+#
+#     def delete(self):
+#         print("Deleting ", self, self.id)
+#         self.handler.remove_widget(self)
 
-        if self.weight is None:
-            self.weight = 1
 
-        if self.nodes:
-            self.start_pos = self.nodes[0].rect.center
-            self.end_pos = self.nodes[1].rect.center
-
-            self.rect.centerx = (self.nodes[0].rect.centerx + self.nodes[1].rect.centerx) / 2
-            self.rect.centery = (self.nodes[0].rect.centery + self.nodes[1].rect.centery) / 2
-
-    def draw(self, surface):
-        super().draw(surface)
-
-        if self.nodes:
-            self.start_pos = self.nodes[0].rect.center
-            self.end_pos = self.nodes[1].rect.center
-            self.rect.centerx = (self.nodes[0].rect.centerx + self.nodes[1].rect.centerx) / 2
-            self.rect.centery = (self.nodes[0].rect.centery + self.nodes[1].rect.centery) / 2
-            # pygame.draw.line(surface, COLOR_EDGE, self.start_pos, self.end_pos)
-            a = pygame.Vector2(self.start_pos)
-            b = pygame.Vector2(self.end_pos)
-            # print(math.acos(a*b/(a.magnitude() * b.magnitude())))
-            arrow.draw_arrow(surface, a, b, COLOR_EDGE, 2, 10, 10)
-            # arrow.draw_arrow(screen, pygame.Vector2(self.start_pos), pygame.Vector2(x, y), COLOR_EDGE, 2, 10, 10)
-
-    def delete(self):
-        print("Deleting ", self, self.id)
-        self.handler.remove_widget(self)
+# class Edge(Widget):
+#     def __init__(self, start_pos, end_pos, weight=1, color=COLOR_EDGE, **kwargs):
+#         super().__init__(**kwargs)
+#         self.weight = weight
+#         self.color = color
+#         self.body_width = kwargs.get("body_width")
+#         self.head_width = kwargs.get("head_width")
+#         self.head_height = kwargs.get("head_height")
+#         self.start_pos = pygame.Vector2(start_pos)
+#         self.end_pos = pygame.Vector2(end_pos)
+#
+#     def update(self):
+#         pass
+#
+#     def draw(self, surface):
+#         arrow.draw_arrow(surface, self.start_pos, self.end_pos, self.color)
 
 
 class Button(Widget):
@@ -242,12 +260,13 @@ class WidgetManager(object):
     def __init__(self, surface):
         self.widget_list = []
         self.button_list = []
+        self.edge_list = []
         self.graph = None
         self.surface = surface
         self.id_count = 0
 
         # widget types
-        self.widget_types = ["node", "edge", "button"]
+        self.widget_types = ["node", "button"]
 
         # Widget attributes
         self.widget_attributes = [
@@ -300,6 +319,8 @@ class WidgetManager(object):
             surface = self.surface
         for widget in self.widget_list:
             widget.draw(surface)
+        for edge in self.edge_list:
+            arrow.draw_arrow(surface, edge[0], edge[1], color=COLOR_EDGE)
 
         # Draw line when creating edge
         if self.start_pos:
@@ -312,6 +333,8 @@ class WidgetManager(object):
     def update(self):
         for widget in self.widget_list:
             widget.update()
+
+        self.update_edges()
 
         match self.mode:
             case "move":
@@ -338,8 +361,10 @@ class WidgetManager(object):
                 self.create_node(id=id, **kwargs)
                 self.id_count += 1
             case "edge":
-                self.create_edge(id=id, **kwargs)
-                self.id_count += 1
+                # self.create_edge(id=id, **kwargs)
+                # self.id_count += 1
+                print("Widget Manager method add_widget Not implemented for create edge")
+                pass
             case "button":
                 widget = Button(id=id, parent=self, **kwargs)
                 self.button_list.append(widget)
@@ -371,15 +396,19 @@ class WidgetManager(object):
 
     def create_node(self, **kwargs):
         new_node = Node(graph=self.graph, **kwargs)
-        self.graph.add_node(new_node)
+        self.graph.add_node(new_node, **kwargs)
         self.widget_list.append(new_node)
 
-    def create_edge(self, **kwargs):
-        new_edge = Edge(handler=self, graph=self.graph, **kwargs)
-        self.graph.add_edge(new_edge.nodes[0], new_edge.nodes[1], new_edge, new_edge.weight)
-        self.widget_list.append(new_edge)
+    def create_edge(self, node0, node1, **kwargs):
+        self.graph.add_edge(node0, node1, **kwargs)
+        node0.add_edge(node1, **kwargs)
 
-    def add_edge(self, node, weight=1):
+        directed = kwargs.get("directed")
+        if directed:
+            return
+        node1.add_edge(node0, **kwargs)
+
+    def add_edge(self, node, weight=1, directed=True):
         # Only select Nodes
         if type(node) is not Node:
             return
@@ -391,7 +420,7 @@ class WidgetManager(object):
         if len(self.selected_widgets) == 1:
             if node not in self.selected_widgets:
                 self.selected_widgets.append(node)
-                self.add_widget("edge", nodes=[self.selected_widgets[0], self.selected_widgets[1]])
+                self.create_edge(self.selected_widgets[0], self.selected_widgets[1], weight=weight, directed=directed)
                 self.clear_selected_widgets()
 
     def get_clicked(self, mouse_pos):
@@ -439,6 +468,7 @@ class WidgetManager(object):
         for widget in clicked_widgets:
             widget.click()
 
+
         # Perform functions based on Mode
         match self.mode:
             case "create node":
@@ -470,23 +500,22 @@ class WidgetManager(object):
                     self.clear_selected_widgets()
 
             case "delete":
-                # TODO Change Edges to reference graph for deletion
                 for widget in clicked_widgets:
                     # Deleting Node, delete the node itself, and all edges connected to it
                     if type(widget) == Node:
+
+                        # Undirected
+                        edges = self.graph.edges([widget])
+                        # directed
+                        # edges = nx.edges(self.graph, [widget])
+
+                        for edge in list(edges):
+                            self.graph.remove_edge(edge[0], edge[1])
+
+                        # Todo same thing with edges do with neighbors edges for directed graph case
+
                         self.graph.remove_node(widget)
                         self.remove_widget(widget)
-                    #     for edge in widget.edges:
-                    #         self.widget_list.remove(edge)
-                    #         # Also remove the deleted edges from the other node it was connected to
-                    #         for node in edge.nodes:
-                    #             if node is not widget:
-                    #                 node.edges.remove(edge)
-                    #     self.widget_list.remove(widget)
-                    # if type(widget) == Edge:
-                    #     for node in widget.nodes:
-                    #         node.edges.remove(widget)
-                    #     self.widget_list.remove(widget)
 
     def left_click_release(self):
         mouse_pos = pygame.mouse.get_pos()
@@ -499,12 +528,19 @@ class WidgetManager(object):
         self.selected_widgets = []
         self.start_pos = []
 
+    def update_edges(self):
+        self.edge_list = []
+        for edge in self.graph.edges.data():
+            start_pos = pygame.Vector2(edge[0].rect.centerx, edge[0].rect.centery)
+            end_pos = pygame.Vector2(edge[1].rect.centerx, edge[1].rect.centery)
+            self.edge_list.append([start_pos, end_pos])
+
     def test(self):
-        print("TEST DOES NOTHING RN")
+        self.update_edges()
 
     def keydown(self, event):
         for widget in self.selected_widgets:
-            if type(widget) is not Edge:
+            if True:  # if type(widget) is not Edge:
                 if event.key == pygame.K_RETURN:
                     self.selected_widgets = []
                 elif event.key == pygame.K_BACKSPACE:

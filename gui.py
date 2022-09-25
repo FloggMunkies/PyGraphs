@@ -16,8 +16,10 @@ def extract(lst):
 
 # Object initialization
 app = WidgetManager(screen)
-graph = Graph()
-app.graph = graph
+# TODO
+# old_graph = Graph()
+new_graph = nx.Graph()
+app.graph = new_graph
 
 
 app.add_widget("mode button", mode="create node", text="Create Node")
@@ -49,15 +51,14 @@ if __name__ == '__main__':
                 if event.button == LMB:
                     app.left_click()
                 if event.button == RMB:
-                    # App.test()
-                    app.graph.print_graph()
+                    app.test()
             if event.type == pygame.MOUSEBUTTONUP:
                 # Left click release
                 if event.button == LMB:
                     app.left_click_release()
             if event.type == pygame.KEYDOWN:
                 for widget in app.selected_widgets:
-                    if type(widget) is not Edge:
+                    if True: # type(widget) is not Edge:
                         if event.key == pygame.K_RETURN:
                             app.selected_widgets = []
                         elif event.key == pygame.K_BACKSPACE:
