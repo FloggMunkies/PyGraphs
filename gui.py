@@ -3,10 +3,11 @@ from widgets import *
 from gui_settings import *
 from graphing import *
 
-
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 pygame.init()
+
+
 
 
 # Functions
@@ -21,13 +22,13 @@ app = WidgetManager(screen)
 new_graph = nx.Graph()
 app.graph = new_graph
 
+# TODO Delete me
+app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 400, 20, 20))
+app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(200, 400, 20, 20))
+app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(600, 400, 20, 20))
+app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 200, 20, 20))
+app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 600, 20, 20))
 
-app.add_widget("mode button", mode="create node", text="Create Node")
-app.add_widget("mode button", mode="create edge", text="Create Edge")
-app.add_widget("mode button", mode="edit", text="Edit Mode")
-app.add_widget("mode button", mode="delete", text="Delete Mode")
-app.add_widget("mode button", mode="move", text="Move Mode")
-app.add_widget("textbox", label_text="Area:")
 
 if __name__ == '__main__':
     # Main Loop

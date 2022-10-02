@@ -1,4 +1,4 @@
-import pygame, arrow
+import pygame, arrow, math
 from gui_settings import *
 
 
@@ -141,64 +141,6 @@ class Node(Widget):
         pass
 
 
-# Depreciated
-
-# class Edge(Widget):
-#     def __init__(self, graph=None, **kwargs):
-#         super().__init__(**kwargs)
-#         self.graph = graph
-#
-#         self.weight = kwargs.get("weight")
-#         self.nodes = kwargs.get("nodes")
-#
-#         if self.weight is None:
-#             self.weight = 1
-#
-#         if self.nodes:
-#             self.start_pos = self.nodes[0].rect.center
-#             self.end_pos = self.nodes[1].rect.center
-#
-#             self.rect.centerx = (self.nodes[0].rect.centerx + self.nodes[1].rect.centerx) / 2
-#             self.rect.centery = (self.nodes[0].rect.centery + self.nodes[1].rect.centery) / 2
-#
-#     def draw(self, surface):
-#         super().draw(surface)
-#
-#         if self.nodes:
-#             self.start_pos = self.nodes[0].rect.center
-#             self.end_pos = self.nodes[1].rect.center
-#             self.rect.centerx = (self.nodes[0].rect.centerx + self.nodes[1].rect.centerx) / 2
-#             self.rect.centery = (self.nodes[0].rect.centery + self.nodes[1].rect.centery) / 2
-#             # pygame.draw.line(surface, COLOR_EDGE, self.start_pos, self.end_pos)
-#             a = pygame.Vector2(self.start_pos)
-#             b = pygame.Vector2(self.end_pos)
-#             # print(math.acos(a*b/(a.magnitude() * b.magnitude())))
-#             arrow.draw_arrow(surface, a, b, COLOR_EDGE, 2, 10, 10)
-#             # arrow.draw_arrow(screen, pygame.Vector2(self.start_pos), pygame.Vector2(x, y), COLOR_EDGE, 2, 10, 10)
-#
-#     def delete(self):
-#         print("Deleting ", self, self.id)
-#         self.handler.remove_widget(self)
-
-
-# class Edge(Widget):
-#     def __init__(self, start_pos, end_pos, weight=1, color=COLOR_EDGE, **kwargs):
-#         super().__init__(**kwargs)
-#         self.weight = weight
-#         self.color = color
-#         self.body_width = kwargs.get("body_width")
-#         self.head_width = kwargs.get("head_width")
-#         self.head_height = kwargs.get("head_height")
-#         self.start_pos = pygame.Vector2(start_pos)
-#         self.end_pos = pygame.Vector2(end_pos)
-#
-#     def update(self):
-#         pass
-#
-#     def draw(self, surface):
-#         arrow.draw_arrow(surface, self.start_pos, self.end_pos, self.color)
-
-
 class Button(Widget):
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
@@ -231,7 +173,6 @@ class Textbox(Button):
         self.label_text = kwargs.get("label_text")
         if not self.label_text:
             self.label_text = "Default:"
-        print(self.label_text)
         self.label = self.font.render(self.label_text, True, COLOR_TEXT, None)
         self.label_rect = self.label.get_rect()
         self.label_rect.center = self.rect.center
@@ -245,6 +186,7 @@ class Textbox(Button):
 
     def update_text(self, text_string=None, font_name=None, font_size=None, color=None, max_font_size=96,
                     width_buffer=0, height_buffer=0, x_offset=0, y_offset=0):
+        # TODO doesn't work when in Create Edge or Move modes
         # print(self.font_size)
         super(Button, self).update_text(width_buffer=60, y_offset=16)
         self.label_rect = self.label.get_rect()
@@ -256,6 +198,43 @@ class Textbox(Button):
         surface.blit(self.label, self.label_rect)
 
 
+class Togglebox(Widget):
+    def __init__(self, parent, **kwargs):
+        super().__init__(**kwargs)
+        self.parent = parent
+        assert type(self.parent) == WidgetManager, "Parent should be WidgetManager instance"
+        self.font = pygame.font.Font('freesansbold.ttf', 24)
+        self.label_text = kwargs.get("label_text")
+        self.alt_label_text = kwargs.get("alt_label_text")
+        self.state = 0
+        self.setting = kwargs.get("setting")
+        if not self.label_text:
+            self.label_text = "Default:"
+        if not self.alt_label_text:
+            self.alt_label_text = "Default:"
+        self.label = self.font.render(self.label_text, True, COLOR_TEXT, COLOR_WIDGET)
+        self.label_rect = self.label.get_rect()
+        self.label_rect.x = self.rect.x+self.rect.width
+        self.label_rect.y = self.rect.y
+
+        self.alt_label = self.font.render(self.alt_label_text, True, COLOR_TEXT, COLOR_SELECTED)
+
+    def draw(self, surface):
+        super().draw(surface)
+        surface.blit(self.label, self.label_rect)
+
+    def click(self):
+        # Toggle
+        temp_label = self.label
+        self.label = self.alt_label
+        self.alt_label = temp_label
+
+        self.state = 1 - self.state
+
+        self.parent.settings[self.setting] = self.state
+        print(self.parent.settings)
+
+
 class WidgetManager(object):
     def __init__(self, surface):
         self.widget_list = []
@@ -264,16 +243,6 @@ class WidgetManager(object):
         self.graph = None
         self.surface = surface
         self.id_count = 0
-
-        # widget types
-        self.widget_types = ["node", "button"]
-
-        # Widget attributes
-        self.widget_attributes = [
-            "text",
-            "color",
-            "rect"
-        ]
 
         # Which widgets are currently selected
         self.selected_widgets = []
@@ -285,6 +254,10 @@ class WidgetManager(object):
             "delete",
             "move"
         ]
+
+        self.settings = {
+            "Directed": 0,
+        }
 
         self.mode = "create node"
 
@@ -298,6 +271,15 @@ class WidgetManager(object):
 
         # Create Edge Line variables
         self.start_pos = []
+
+        self.add_widget("mode button", mode="create node", text="Create Node")
+        self.add_widget("mode button", mode="create edge", text="Create Edge")
+        self.add_widget("mode button", mode="edit", text="Edit Mode")
+        self.add_widget("mode button", mode="delete", text="Delete Mode")
+        self.add_widget("mode button", mode="move", text="Move Mode")
+        self.add_widget("textbox", label_text="Area:")
+        self.add_widget("togglebox", color=COLOR_EDGE, label_text="Undirected", alt_label_text="Directed",
+                        setting="Directed", rect=pygame.Rect(SCREEN_WIDTH - 160, SCREEN_HEIGHT - 128, 16, 16))
 
     def change_mode(self, new_mode):
         self.mode = new_mode
@@ -320,11 +302,153 @@ class WidgetManager(object):
         for widget in self.widget_list:
             widget.draw(surface)
         for edge in self.edge_list:
-            arrow.draw_arrow(surface, edge[0], edge[1], color=COLOR_EDGE)
+            width = abs(edge[0][0] - edge[1][0])
+            height = abs(edge[0][1] - edge[1][1])
+            left = 0
+            top = 0
+            start_angle = 0
+            end_angle = 0
+            l = 0
+            t = 0
+            sa = 0
+            ea = 0
+            # Check if nodes on horizontal line
+            scalar = 4
+            if edge[0][1] == edge[1][1]:
+                left = min(edge[0][0], edge[1][0])
+                top = edge[0][1] - scalar
+                width = width / 2
+                height = scalar
+                start_angle = 0
+                end_angle = math.pi
+            # Check if nodes on vertical line
+            elif edge[0][0] == edge[1][0]:
+                top = min(edge[0][1], edge[1][1])
+                left = edge[0][0]
+                width = scalar
+                height = height / 2
+                start_angle = math.pi / 2
+                end_angle = math.pi * 3 / 2
+            else:
+                # arrow.draw_arrow(surface, edge[0], edge[1], color=COLOR_EDGE)
+                left = 0
+                top = 0
+
+                if width == 0:
+                    width = 2
+                if height == 0:
+                    height = 2
+                start_angle = 0
+                end_angle = math.pi /2
+                l = 0
+                t = 0
+                sa = math.pi
+                ea = math.pi * 3 / 2
+
+                # Draw based on where second spot is in relation to original spot
+                # Right
+                if edge[0][0] < edge[1][0]:
+                    # Lower Right
+                    left = edge[0][0] - width
+                    l = edge[0][0]
+                    if edge[0][1] < edge[1][1]:
+                        top = edge[0][1]
+                        t = edge[0][1] - height
+                    # Upper Right
+                    else:
+                        top = edge[1][1] - height
+                        start_angle = math.pi *3/2
+                        end_angle = 0
+                        t = edge[1][1]
+                        sa = math.pi / 2
+                        ea = math.pi
+                # Left
+                else:
+                    left = edge[1][0]
+                    l= edge[1][0] - width
+                    # Lower Left
+                    if edge[0][1] < edge[1][1]:
+                        top = edge[0][1]
+                        start_angle = math.pi * 1 / 2
+                        end_angle = math.pi
+                        t = edge[0][1] - height
+                        sa = math.pi * 3/2
+                        ea = 0
+                    # Upper Left
+                    else:
+                        top = edge[1][1] - height
+                        start_angle = math.pi
+                        end_angle = math.pi * 3/2
+                        t = edge[0][1] - height
+                        sa = 0
+                        ea = math.pi / 2
+
+            # pygame.draw.rect(surface,COLOR_NODE,[left, top, width*2, height*2], 1)
+            # pygame.draw.rect(surface, COLOR_NODE, [l, t, width * 2, height * 2], 1)
+            pygame.draw.arc(surface,COLOR_SELECTED,[left, top, width*2, height*2], start_angle, end_angle)
+            if l:
+                pygame.draw.arc(surface, COLOR_SELECTED, [l, t, width * 2, height * 2], sa, ea)
+
+
 
         # Draw line when creating edge
         if self.start_pos:
-            pygame.draw.line(surface, COLOR_EDGE, self.start_pos, pygame.mouse.get_pos())
+            mpos = pygame.mouse.get_pos()
+            pygame.draw.line(surface, COLOR_EDGE, self.start_pos, mpos)
+
+            # left = 0
+            # top = 0
+            # width = abs(self.start_pos[0] - mpos[0])
+            # height = abs(self.start_pos[1] - mpos[1])
+            # start_angle = 0
+            # end_angle = math.pi /2
+            # l = 0
+            # t = 0
+            # sa = math.pi
+            # ea = math.pi * 3 / 2
+
+            # Draw based on where second spot is in relation to original spot
+            # Right
+            # if self.start_pos[0] < mpos[0]:
+            #     # Lower Right
+            #     left = self.start_pos[0] - width
+            #     l = self.start_pos[0]
+            #     if self.start_pos[1] < mpos[1]:
+            #         top = self.start_pos[1]
+            #         t = self.start_pos[1] - height
+            #     # Upper Right
+            #     else:
+            #         top = mpos[1] - height
+            #         start_angle = math.pi *3/2
+            #         end_angle = 0
+            #         t = mpos[1]
+            #         sa = math.pi / 2
+            #         ea = math.pi
+            # # Left
+            # else:
+            #     left = mpos[0]
+            #     l= mpos[0] - width
+            #     # Lower Left
+            #     if self.start_pos[1] < mpos[1]:
+            #         top = self.start_pos[1]
+            #         start_angle = math.pi * 1 / 2
+            #         end_angle = math.pi
+            #         t = self.start_pos[1] - height
+            #         sa = math.pi * 3/2
+            #         ea = 0
+            #     # Upper Left
+            #     else:
+            #         top = mpos[1] - height
+            #         start_angle = math.pi
+            #         end_angle = math.pi * 3/2
+            #         t = self.start_pos[1] - height
+            #         sa = 0
+            #         ea = math.pi / 2
+
+            # pygame.draw.rect(surface,COLOR_NODE,[left, top, width*2, height*2], 1)
+            # pygame.draw.rect(surface, COLOR_NODE, [l, t, width * 2, height * 2], 1)
+            # pygame.draw.arc(surface,COLOR_SELECTED,[left, top, width*2, height*2], start_angle, end_angle)
+            # pygame.draw.arc(surface, COLOR_SELECTED, [l, t, width * 2, height * 2], sa, ea)
 
         # Draw Mode Textbox
         surface.blit(self.text_box, self.text_box_rect)
@@ -360,23 +484,16 @@ class WidgetManager(object):
             case "node":
                 self.create_node(id=id, **kwargs)
                 self.id_count += 1
-            case "edge":
-                # self.create_edge(id=id, **kwargs)
-                # self.id_count += 1
-                print("Widget Manager method add_widget Not implemented for create edge")
-                pass
             case "button":
                 widget = Button(id=id, parent=self, **kwargs)
                 self.button_list.append(widget)
                 self.update_buttons()
                 self.id_count += 1
-                print("Button created")
             case "textbox":
                 widget = Textbox(id=id, parent=self, **kwargs)
                 self.button_list.append(widget)
                 self.update_buttons()
                 self.id_count += 1
-                print("Textbox created")
             case "mode button":
                 mode = kwargs.get("mode")
                 if mode:
@@ -384,15 +501,15 @@ class WidgetManager(object):
                     widget = ModeButton(id=id, parent=self, mode=mode, **kwargs)
                     self.button_list.append(widget)
                     self.update_buttons()
-                    print("Mode Button Created: ", mode)
                     self.id_count += 1
+            case "togglebox":
+                widget = Togglebox(id=id, parent=self, **kwargs)
+                self.id_count += 1
             case unknown_command:
                 print(unknown_command, " does not match any widget types.")
                 return
         if widget:
             self.widget_list.append(widget)
-        # for widget in self.widget_list:
-        #     print(widget.id)
 
     def create_node(self, **kwargs):
         new_node = Node(graph=self.graph, **kwargs)
@@ -536,7 +653,9 @@ class WidgetManager(object):
             self.edge_list.append([start_pos, end_pos])
 
     def test(self):
-        self.update_edges()
+        print(self.selected_widgets)
+        # print(self.graph.nodes.data())
+        # print(self.graph.edges.data())
 
     def keydown(self, event):
         for widget in self.selected_widgets:
