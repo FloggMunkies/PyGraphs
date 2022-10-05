@@ -1,3 +1,5 @@
+import networkx as nx
+
 
 class Graph(object):
     def __init__(self):
@@ -105,6 +107,7 @@ class Graph(object):
             if prnt:
                 print(node.id, ":", temp)
         return temp
+
 
 graph = Graph()
 
