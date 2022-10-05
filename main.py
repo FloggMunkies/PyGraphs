@@ -1,16 +1,49 @@
-# This is a sample Python script.
+import pygame
+import gui
+from gui_settings import *
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    # Main Loop
+    running = True
+    while running:
+        # Initialize
+        dt = gui.clock.tick(FPS)
+
+        # Drawing Layer 0 (Background)
+        gui.screen.fill(COLOR_SCREEN)
+        # Pre-Event
+        # App.update()
+
+        # Pygame Events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:  # Closing Window
+                running = False
+
+            if event.type == pygame.MOUSEBUTTONDOWN:  # clicking Mouse
+                if event.button == LMB:
+                    pass
+                if event.button == RMB:
+                    pass
+
+            if event.type == pygame.MOUSEBUTTONUP:  # release Mouse
+                if event.button == LMB:
+                    pass
+                if event.button == RMB:
+                    pass
+
+            if event.type == pygame.KEYDOWN:  # Keyboard pressed
+                pass
+
+        # Post-Events
+
+        # Drawing Layer 1
+        # App.draw()
+
+        # Final
+        pygame.display.update()
+
+    print("Main Loop closed.")
+
+
+
