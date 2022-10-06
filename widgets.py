@@ -214,7 +214,7 @@ class Togglebox(Widget):
             self.alt_label_text = "Default:"
         self.label = self.font.render(self.label_text, True, COLOR_TEXT, COLOR_WIDGET)
         self.label_rect = self.label.get_rect()
-        self.label_rect.x = self.rect.x+self.rect.width
+        self.label_rect.x = self.rect.x + self.rect.width
         self.label_rect.y = self.rect.y
 
         self.alt_label = self.font.render(self.alt_label_text, True, COLOR_TEXT, COLOR_SELECTED)
@@ -301,158 +301,82 @@ class WidgetManager(object):
             surface = self.surface
         for widget in self.widget_list:
             widget.draw(surface)
-        for edge in self.edge_list:
-            width = abs(edge[0][0] - edge[1][0])
-            height = abs(edge[0][1] - edge[1][1])
-            left = 0
-            top = 0
-            start_angle = 0
-            end_angle = 0
-            l = 0
-            t = 0
-            sa = 0
-            ea = 0
-            # Check if nodes on horizontal line
-            scalar = 4
-            if edge[0][1] == edge[1][1]:
-                left = min(edge[0][0], edge[1][0])
-                top = edge[0][1] - scalar
-                width = width / 2
-                height = scalar
-                start_angle = 0
-                end_angle = math.pi
-            # Check if nodes on vertical line
-            elif edge[0][0] == edge[1][0]:
-                top = min(edge[0][1], edge[1][1])
-                left = edge[0][0]
-                width = scalar
-                height = height / 2
-                start_angle = math.pi / 2
-                end_angle = math.pi * 3 / 2
-            else:
-                # arrow.draw_arrow(surface, edge[0], edge[1], color=COLOR_EDGE)
-                left = 0
-                top = 0
 
-                if width == 0:
-                    width = 2
-                if height == 0:
-                    height = 2
-                start_angle = 0
-                end_angle = math.pi /2
-                l = 0
-                t = 0
-                sa = math.pi
-                ea = math.pi * 3 / 2
-
-                # Draw based on where second spot is in relation to original spot
-                # Right
-                if edge[0][0] < edge[1][0]:
-                    # Lower Right
-                    left = edge[0][0] - width
-                    l = edge[0][0]
-                    if edge[0][1] < edge[1][1]:
-                        top = edge[0][1]
-                        t = edge[0][1] - height
-                    # Upper Right
-                    else:
-                        top = edge[1][1] - height
-                        start_angle = math.pi *3/2
-                        end_angle = 0
-                        t = edge[1][1]
-                        sa = math.pi / 2
-                        ea = math.pi
-                # Left
-                else:
-                    left = edge[1][0]
-                    l= edge[1][0] - width
-                    # Lower Left
-                    if edge[0][1] < edge[1][1]:
-                        top = edge[0][1]
-                        start_angle = math.pi * 1 / 2
-                        end_angle = math.pi
-                        t = edge[0][1] - height
-                        sa = math.pi * 3/2
-                        ea = 0
-                    # Upper Left
-                    else:
-                        top = edge[1][1] - height
-                        start_angle = math.pi
-                        end_angle = math.pi * 3/2
-                        t = edge[0][1] - height
-                        sa = 0
-                        ea = math.pi / 2
-
-            # pygame.draw.rect(surface,COLOR_NODE,[left, top, width*2, height*2], 1)
-            # pygame.draw.rect(surface, COLOR_NODE, [l, t, width * 2, height * 2], 1)
-            pygame.draw.arc(surface,COLOR_SELECTED,[left, top, width*2, height*2], start_angle, end_angle)
-            if l:
-                pygame.draw.arc(surface, COLOR_SELECTED, [l, t, width * 2, height * 2], sa, ea)
-
-
+        self.draw_edge(surface)
 
         # Draw line when creating edge
+
         if self.start_pos:
             mpos = pygame.mouse.get_pos()
             pygame.draw.line(surface, COLOR_EDGE, self.start_pos, mpos)
 
-            # left = 0
-            # top = 0
-            # width = abs(self.start_pos[0] - mpos[0])
-            # height = abs(self.start_pos[1] - mpos[1])
-            # start_angle = 0
-            # end_angle = math.pi /2
-            # l = 0
-            # t = 0
-            # sa = math.pi
-            # ea = math.pi * 3 / 2
-
-            # Draw based on where second spot is in relation to original spot
-            # Right
-            # if self.start_pos[0] < mpos[0]:
-            #     # Lower Right
-            #     left = self.start_pos[0] - width
-            #     l = self.start_pos[0]
-            #     if self.start_pos[1] < mpos[1]:
-            #         top = self.start_pos[1]
-            #         t = self.start_pos[1] - height
-            #     # Upper Right
-            #     else:
-            #         top = mpos[1] - height
-            #         start_angle = math.pi *3/2
-            #         end_angle = 0
-            #         t = mpos[1]
-            #         sa = math.pi / 2
-            #         ea = math.pi
-            # # Left
-            # else:
-            #     left = mpos[0]
-            #     l= mpos[0] - width
-            #     # Lower Left
-            #     if self.start_pos[1] < mpos[1]:
-            #         top = self.start_pos[1]
-            #         start_angle = math.pi * 1 / 2
-            #         end_angle = math.pi
-            #         t = self.start_pos[1] - height
-            #         sa = math.pi * 3/2
-            #         ea = 0
-            #     # Upper Left
-            #     else:
-            #         top = mpos[1] - height
-            #         start_angle = math.pi
-            #         end_angle = math.pi * 3/2
-            #         t = self.start_pos[1] - height
-            #         sa = 0
-            #         ea = math.pi / 2
-
-            # pygame.draw.rect(surface,COLOR_NODE,[left, top, width*2, height*2], 1)
-            # pygame.draw.rect(surface, COLOR_NODE, [l, t, width * 2, height * 2], 1)
-            # pygame.draw.arc(surface,COLOR_SELECTED,[left, top, width*2, height*2], start_angle, end_angle)
-            # pygame.draw.arc(surface, COLOR_SELECTED, [l, t, width * 2, height * 2], sa, ea)
-
         # Draw Mode Textbox
         surface.blit(self.text_box, self.text_box_rect)
         surface.blit(self.text, self.text_rect)
+
+    def _get_edge_direction(self, node1, node2):
+        x = int(node1[0] - node2[0])
+        y = int(node1[1] - node2[1])
+        if x < 0:
+            x = -1
+        if y < 0:
+            y = -1
+        if x > 0:
+            x = 1
+        if y > 0:
+            y = 1
+        return x, y
+
+    def draw_edge(self, surface=None):
+        for edge in self.edge_list:
+            # Check if Directed Edge
+            color = COLOR_EDGE
+            if edge[2]:
+                x, y = self._get_edge_direction(edge[0], edge[1])
+                color = COLOR_EDGE_CW
+                start_pos = edge[0]
+                end_pos = edge[1]
+                # Check if nodes on horizontal line
+                scalar = 12
+                if y == 0:
+                    start_pos = pygame.Vector2(edge[0][0], edge[0][1] - scalar)
+                    end_pos = pygame.Vector2(edge[1][0], edge[1][1] - scalar)
+                    if x > 0:
+                        color = COLOR_EDGE_CCW
+                        start_pos = pygame.Vector2(edge[0][0], edge[0][1] + scalar)
+                        end_pos = pygame.Vector2(edge[1][0], edge[1][1] + scalar)
+                # Check if nodes on vertical line
+                elif x == 0:
+                    start_pos = pygame.Vector2(edge[0][0]- scalar, edge[0][1])
+                    end_pos = pygame.Vector2(edge[1][0] - scalar, edge[1][1])
+                    color = COLOR_EDGE_CCW
+                    if y < 0:
+                        start_pos = pygame.Vector2(edge[0][0] + scalar, edge[0][1])
+                        end_pos = pygame.Vector2(edge[1][0] + scalar, edge[1][1])
+                        color = COLOR_EDGE_CW
+
+                else:
+                    # Draw based on where second spot is in relation to original spot
+                    # Right
+                    if x < 0:
+                        color=COLOR_EDGE_CW
+                        # Lower Right
+                        start_pos = pygame.Vector2(edge[0][0]+scalar, edge[0][1])
+                        end_pos = pygame.Vector2(edge[1][0], edge[1][1] - scalar)
+                        # Upper Right
+                        if y > 0:
+                            start_pos = pygame.Vector2(edge[0][0], edge[0][1] - scalar)
+                            end_pos = pygame.Vector2(edge[1][0] - scalar, edge[1][1])
+                    # Left
+                    else:
+                        color=COLOR_EDGE_CCW
+                        start_pos = pygame.Vector2(edge[0][0], edge[0][1] + scalar)
+                        end_pos = pygame.Vector2(edge[1][0] + scalar, edge[1][1])
+                        # Lower Left
+                        if y > 0:
+                            start_pos = pygame.Vector2(edge[0][0] - scalar, edge[0][1])
+                            end_pos = pygame.Vector2(edge[1][0], edge[1][1] + scalar)
+                arrow.draw_arrow(surface, start_pos, end_pos, COLOR_EDGE, body_width=1, head_width=12, head_height= 12)
 
     def update(self):
         for widget in self.widget_list:
@@ -585,7 +509,6 @@ class WidgetManager(object):
         for widget in clicked_widgets:
             widget.click()
 
-
         # Perform functions based on Mode
         match self.mode:
             case "create node":
@@ -650,12 +573,11 @@ class WidgetManager(object):
         for edge in self.graph.edges.data():
             start_pos = pygame.Vector2(edge[0].rect.centerx, edge[0].rect.centery)
             end_pos = pygame.Vector2(edge[1].rect.centerx, edge[1].rect.centery)
-            self.edge_list.append([start_pos, end_pos])
+            self.edge_list.append([start_pos, end_pos, edge[2]["directed"]])
 
     def test(self):
-        print(self.selected_widgets)
-        # print(self.graph.nodes.data())
-        # print(self.graph.edges.data())
+        for edge in self.graph.edges.data():
+            print(edge[0].id, edge[1].id, edge[2])
 
     def keydown(self, event):
         for widget in self.selected_widgets:

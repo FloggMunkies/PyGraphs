@@ -11,10 +11,13 @@ FPS = 60
 # Colors
 COLOR_NODE = color("White")
 COLOR_EDGE = color("aqua")
+COLOR_EDGE_CW = color("coral")
+COLOR_EDGE_CCW = color("turquoise")
 COLOR_TEXT = color("black")
 COLOR_SELECTED = color("coral")
 COLOR_SCREEN = color("black")
 COLOR_WIDGET = color("SlateGray")
+
 
 # Mouse button variables
 LMB = 1

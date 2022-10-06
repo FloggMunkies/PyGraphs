@@ -7,10 +7,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 pygame.init()
 
-
-
-
 # Functions
+
+
 def extract(lst):
     return [item[0] for item in lst]
 
@@ -19,15 +18,15 @@ def extract(lst):
 app = WidgetManager(screen)
 # TODO
 # old_graph = Graph()
-new_graph = nx.Graph()
+new_graph = nx.MultiDiGraph()
 app.graph = new_graph
 
 # TODO Delete me
-app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 400, 20, 20))
-app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(200, 400, 20, 20))
-app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(600, 400, 20, 20))
-app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 200, 20, 20))
-app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 600, 20, 20))
+# app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 400, 20, 20))
+# app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(200, 400, 20, 20))
+# app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(600, 400, 20, 20))
+# app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 200, 20, 20))
+# app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 600, 20, 20))
 
 
 if __name__ == '__main__':
