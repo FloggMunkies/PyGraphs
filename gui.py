@@ -21,13 +21,6 @@ app = WidgetManager(screen)
 new_graph = nx.MultiDiGraph()
 app.graph = new_graph
 
-# TODO Delete me
-# app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 400, 20, 20))
-# app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(200, 400, 20, 20))
-# app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(600, 400, 20, 20))
-# app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 200, 20, 20))
-# app.add_widget("node", color=COLOR_NODE, rect = pygame.Rect(400, 600, 20, 20))
-
 
 if __name__ == '__main__':
     # Main Loop
@@ -37,7 +30,7 @@ if __name__ == '__main__':
         dt = clock.tick(FPS) / 1000  # Returns milliseconds between each call to 'tick'. The convert time to seconds.
 
         # Background drawing
-        screen.fill((0, 0, 0))  # Fill the screen with background color.
+        screen.fill(COLOR_SCREEN)  # Fill the screen with background color.
         # backdrop.draw(screen)
 
         # Updates before pygame events
@@ -57,15 +50,7 @@ if __name__ == '__main__':
                 if event.button == LMB:
                     app.left_click_release()
             if event.type == pygame.KEYDOWN:
-                for widget in app.selected_widgets:
-                    if True: # type(widget) is not Edge:
-                        if event.key == pygame.K_RETURN:
-                            app.selected_widgets = []
-                        elif event.key == pygame.K_BACKSPACE:
-                            widget.text_string = widget.text_string[:-1]
-                        else:
-                            widget.text_string += event.unicode
-                        widget.update_text()
+                app.keydown(event)
 
                 # Replaced by Buttons
                 # match event.key:

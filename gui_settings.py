@@ -1,7 +1,7 @@
 from pygame import Color as color
 # Surface Dimensions
 SCREEN_WIDTH = 1600
-SCREEN_HEIGHT = 1024
+SCREEN_HEIGHT = 960
 BUFFER_WIDTH = SCREEN_WIDTH
 BUFFER_HEIGHT = 64
 
@@ -9,14 +9,13 @@ BUFFER_HEIGHT = 64
 FPS = 60
 
 # Colors
-COLOR_NODE = color("White")
-COLOR_EDGE = color("aqua")
-COLOR_EDGE_CW = color("coral")
-COLOR_EDGE_CCW = color("turquoise")
+COLOR_NODE = color("forestgreen")
+COLOR_EDGE = color("gold")
+COLOR_EDGE_UNDIRECTED = color("orange")
 COLOR_TEXT = color("black")
-COLOR_SELECTED = color("coral")
+COLOR_SELECTED = color("chocolate")
 COLOR_SCREEN = color("black")
-COLOR_WIDGET = color("SlateGray")
+COLOR_WIDGET = color("gainsboro")
 
 
 # Mouse button variables
