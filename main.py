@@ -19,7 +19,7 @@ class GameManager(object):
                 if event.button == LMB:
                     gui.app.left_click()
                 if event.button == RMB:
-                    pass
+                    gui.app.test()
 
             if event.type == pygame.MOUSEBUTTONUP:  # release Mouse
                 if event.button == LMB:

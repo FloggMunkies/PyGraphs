@@ -16,10 +16,7 @@ def extract(lst):
 
 # Object initialization
 app = WidgetManager(screen)
-# TODO
-# old_graph = Graph()
-new_graph = nx.MultiDiGraph()
-app.graph = new_graph
+app.graph = nx.MultiDiGraph()
 
 
 if __name__ == '__main__':
@@ -51,19 +48,6 @@ if __name__ == '__main__':
                     app.left_click_release()
             if event.type == pygame.KEYDOWN:
                 app.keydown(event)
-
-                # Replaced by Buttons
-                # match event.key:
-                #     case pygame.K_n:
-                #         App.change_mode("create node")
-                #     case pygame.K_e:
-                #         App.change_mode("create edge")
-                #     case pygame.K_m:
-                #         App.change_mode("move")
-                #     case pygame.K_d:
-                #         App.change_mode("delete")
-                #     case pygame.K_x:
-                #         App.change_mode("edit")
 
         # Updates after pygame events
         app.draw()

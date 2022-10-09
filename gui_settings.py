@@ -14,7 +14,7 @@ COLOR_EDGE = color("gold")
 COLOR_EDGE_UNDIRECTED = color("orange")
 COLOR_TEXT = color("black")
 COLOR_SELECTED = color("chocolate")
-COLOR_SCREEN = color("black")
+COLOR_SCREEN = color("midnightblue")
 COLOR_WIDGET = color("gainsboro")
 
 

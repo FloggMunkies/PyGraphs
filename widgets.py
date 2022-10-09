@@ -1,4 +1,4 @@
-import pygame, arrow, networkx
+import pygame, arrow, networkx, json, os
 from gui_settings import *
 
 
@@ -19,6 +19,9 @@ class Widget(pygame.sprite.Sprite):
         if self.rect is None:
             self.image = pygame.Surface((8, 8))
             self.rect = self.image.get_rect()
+        elif type(self.rect) is not pygame.Rect:
+            self.rect = pygame.Rect(self.rect[0], self.rect[1], self.rect[2], self.rect[3])
+            self.image = pygame.Surface((self.rect.width, self.rect.height))
         else:
             self.image = pygame.Surface((self.rect.width, self.rect.height))
 
@@ -103,24 +106,17 @@ class Widget(pygame.sprite.Sprite):
 
 class Node(Widget):
     def __init__(self, graph=None, **kwargs):
-        super().__init__(text="Default", **kwargs)
+        super().__init__(**kwargs)
         self.graph = graph
 
         # Get kwargs
         self.id = kwargs.get("id")
-        self.name = kwargs.get("name")
-        self.area = kwargs.get("area")
-        self.items = kwargs.get("items")
 
         # Assign default values if no kwargs
         if self.id is None:
             self.id = 0
         if self.name is None:
             self.name = "Default"
-        if self.area is None:
-            self.area = "Default"
-        if self.items is None:
-            self.items = 0
 
         # update Text
         self.text_string = str(self.id)
@@ -144,6 +140,14 @@ class Node(Widget):
     def delete(self):
         pass
 
+    def get_data(self):
+        return {
+            "id": self.id,
+            "text": self.text_string,
+            "rect": [self.rect.x, self.rect.y, self.rect.width, self.rect.height],
+            "name": self.name
+        }
+
 
 class Button(Widget):
     def __init__(self, parent, **kwargs):
@@ -151,9 +155,13 @@ class Button(Widget):
         self.parent = parent
         assert type(self.parent) == WidgetManager, "Parent should be WidgetManager instance"
         self.font = pygame.font.Font('freesansbold.ttf', 24)
+        self.action = kwargs.get("action")
 
     def update(self):
         pass
+
+    def click(self):
+        self.parent.button_click(self.action)
 
 
 class ModeButton(Button):
@@ -264,6 +272,7 @@ class WidgetManager(object):
     def __init__(self, surface):
         self.widget_list = []
         self.button_list = []
+        self.node_list = []
         self.edge_list = []
         self.graph = None
         self.surface = surface
@@ -300,6 +309,8 @@ class WidgetManager(object):
         # Create Edge Line variables
         self.start_pos = []
 
+        self.add_widget("button", text="Save/Export", action="export")
+        self.add_widget("button", text="Load/Import", action="import")
         self.add_widget("mode button", mode="create node", text="Create Node")
         self.add_widget("mode button", mode="create edge", text="Create Edge")
         self.add_widget("mode button", mode="edit", text="Edit Mode")
@@ -440,7 +451,10 @@ class WidgetManager(object):
             return
         match widget_type.lower():
             case "node":
-                self.create_node(id=id, **kwargs)
+                if kwargs.get("id"):
+                    self.create_node(**kwargs)
+                else:
+                    self.create_node(id=id, **kwargs)
                 self.id_count += 1
             case "button":
                 widget = Button(id=id, parent=self, **kwargs)
@@ -473,6 +487,7 @@ class WidgetManager(object):
         new_node = Node(graph=self.graph, **kwargs)
         self.graph.add_node(new_node, **kwargs)
         self.widget_list.append(new_node)
+        self.node_list.append(new_node)
 
     def create_edge(self, node, weight=1, directed=True):
         # Only select Nodes
@@ -489,8 +504,23 @@ class WidgetManager(object):
                 self.graph.add_edge(self.selected_widgets[0], self.selected_widgets[1], weight=weight, directed=directed)
                 self.clear_selected_widgets()
 
+    def create_edge_from_load(self, node0, node1, weight, directed):
+        if type(node0) is Node:
+            self.create_edge(node0, weight, directed)
+            self.create_edge(node1, weight,directed)
+        elif type(node0) is int:
+            self.create_edge(self._get_node_from_id(node0), weight, directed)
+            self.create_edge(self._get_node_from_id(node1), weight, directed)
+
     def get_clicked(self, mouse_pos):
         return [s for s in self.widget_list if s.rect.collidepoint(mouse_pos)]
+
+    def button_click(self, action):
+        match action:
+            case "export":
+                self.export_graph("Saved_Graph_Data")
+            case "import":
+                self.import_graph("Saved_Graph_Data")
 
     def update_buttons(self):
         # Grab all buttons and sort them by ID
@@ -601,9 +631,12 @@ class WidgetManager(object):
             self.edge_list.append([start_pos, end_pos, edge[2]])
 
     def test(self):
-        print(self.settings)
-        for edge in self.graph.edges.data():
-            print(edge[0].id, edge[1].id, edge[2])
+        print(self.node_list)
+        print(self.widget_list)
+        # self.export_graph("Saved_Graph_Data")
+        # print(self.settings)
+        # for edge in self.graph.edges.data():
+        #     print(edge[0].id, edge[1].id, edge[2])
 
     def keydown(self, event):
         for widget in self.selected_widgets:
@@ -617,3 +650,52 @@ class WidgetManager(object):
                 widget.filter()
                 widget.update_text()
 
+    def export_graph(self, directory):
+        try:
+            os.mkdir(directory)
+        except OSError as error:
+            print(error)
+
+        node_path = os.path.join(directory, "exported_nodes.txt")
+        self._export_nodes(node_path)
+
+        edge_path = os.path.join(directory, "exported_edges.txt")
+        self._export_edges(edge_path)
+
+    def _get_node_from_id(self, id):
+        temp = {}
+        for node in self.node_list:
+            temp[node.id] = node
+        return temp[id]
+
+    def _export_edges(self, path):
+        dic = {}
+        for i, edge in enumerate(self.graph.edges.data()):
+            dic[i] = [edge[0].id, edge[1].id, edge[2]]
+        json_object = json.dumps(dic, indent=4)
+        with open(path, "w") as outfile:
+            outfile.write(json_object)
+
+    def _export_nodes(self, path):
+        dic = {}
+        for node in self.node_list:
+            dic[node.id]= node.get_data()
+        json_object = json.dumps(dic, indent=4)
+        with open(path, "w") as outfile:
+            outfile.write(json_object)
+
+    def import_graph(self, directory="Saved_Graph_Data"):
+        self._import_nodes(os.path.join(directory, "exported_nodes.txt"))
+        self._import_edges(os.path.join(directory, "exported_edges.txt"))
+
+    def _import_nodes(self, path):
+        node_file = open(path)
+        node_data = json.load(node_file)
+        for node, var in node_data.items():
+            self.add_widget("node", id=var["id"], text=var["text"], rect=var["rect"], name=var["name"])
+
+    def _import_edges(self, path):
+        edge_file = open(path)
+        edge_data = json.load(edge_file)
+        for edge, var in edge_data.items():
+            self.create_edge_from_load(var[0], var[1], var[2]["weight"], var[2]["directed"])
